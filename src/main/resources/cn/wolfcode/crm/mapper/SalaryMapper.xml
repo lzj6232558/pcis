@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.SalaryMapper" >
+
+  <!-- 映射: -->
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Salary" >
+    <id column="id" property="id" />
+    <result column="tel" property="tel" />
+    <result column="email" property="email" />
+    <result column="baseSalary" property="baseSalary" />
+    <result column="bonus" property="bonus" />
+    <result column="month" property="month" />
+    <result column="totalSalary" property="totalSalary" />
+    <!-- 员工: -->
+    <association property="employeeId" javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="e_id" property="id"/>
+      <result column="e_username" property="username"/>
+    </association>
+
+    <!-- 部门: -->
+    <association property="departmentId" javaType="cn.wolfcode.crm.domain.Department">
+      <id column="d_id" property="id"/>
+      <result column="d_name" property="name"/>
+    </association>
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `salary`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Salary" useGeneratedKeys="true" keyProperty="id" >
+    insert into `salary` (employee_id, department_id, tel, email, baseSalary, bonus, 
+      month, totalSalary)
+    values (#{employeeId.id}, #{departmentId.id}, #{tel}, #{email}, #{baseSalary}, #{bonus}, 
+      #{month}, #{totalSalary})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Salary" >
+    update `salary`
+    set employee_id = #{employeeId.id},
+      department_id = #{departmentId.id},
+      tel = #{tel},
+      email = #{email},
+      baseSalary = #{baseSalary},
+      bonus = #{bonus},
+      month = #{month},
+      totalSalary = #{totalSalary}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select s.id, s.tel, s.email, s.baseSalary, s.bonus, s.month, s.totalSalary,e.id e_id,e.username e_username,d.id d_id,d.name d_name
+    from salary s join employee e on s.employee_id = e.id
+    left join department d on s.department_id = d.id
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select s.id, s.tel, s.email, s.baseSalary, s.bonus, s.month, s.totalSalary,e.id e_id,e.username e_username,d.id d_id,d.name d_name
+    from salary s join employee e on s.employee_id = e.id
+    left join department d on s.department_id = d.id
+  </select>
+
+  <!-- 高级查询:共同代码: -->
+  <sql id="baseSql">
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and e.username like concat('%',#{keyword},'%')
+      </if>
+      <if test="dept != -1 and dept != null">
+        and d.id = #{dept}
+      </if>
+      <if test="beginDate != null">
+        and s.month &gt;=#{beginDate}
+      </if>
+      <if test="endDate">
+        and s.month &lt;=#{endDate}
+      </if>
+    </where>
+  </sql>
+
+  <!-- 高级查询:总条数据 -->
+  <select id="queryCount" resultType="java.lang.Integer">
+    SELECT count(*)
+    FROM salary s join employee e on s.employee_id = e.id
+    left join department d on s.department_id = d.id
+    <include refid="baseSql"/>
+</select>
+
+  <!-- 高级查询:总数据 -->
+  <select id="queryList" resultMap="BaseResultMap">
+    select s.id, s.tel, s.email, s.baseSalary, s.bonus, s.month, s.totalSalary,e.id e_id,e.username e_username,d.id d_id,d.name d_name
+    from salary s join employee e on s.employee_id = e.id
+    left join department d on s.department_id = d.id
+    <include refid="baseSql"/>
+    limit #{beginIndex},#{rows}
+  </select>
+
+  <!-- 根据工资表查询明细: -->
+  <select id="getItemBySalaryId" resultType="cn.wolfcode.crm.domain.SalaryItem">
+    SELECT * FROM salaryitem where salary_id = #{id}
+  </select>
+
+  <!-- 保存工资明细 -->
+  <insert id="insertSalaryItem">
+    INSERT INTO salaryitem(hire,pay,tax,postsalary,ifpay,programme,salary_id) VALUES (#{hire},#{pay},#{tax},#{postsalary},#{ifpay},#{programme},#{salaryId})
+  </insert>
+</mapper>

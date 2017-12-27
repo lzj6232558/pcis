@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.ChartsMapper">
+
+    <select id="saleChart" resultType="java.util.Map">
+        select ${groupType} groupType ,SUM(po.totalAmount) totalAmount
+        from policy po
+        left join policy_product pp on po.id=pp.policy_id
+        left join product p on p.id=pp.product_id
+        left join safetymechanism safe on safe.id=po.safetyMechanism_id
+        left join employee e on e.id=po.inputUser_id
+        <include refid="saleChart"></include>
+        GROUP BY ${groupType}
+    </select>
+    <select id="claimChart" resultType="java.util.Map">
+        select ${groupType} groupType ,SUM(a.totalDamage) totalAmount
+        from accidentitem a
+        left join employee e on e.id=a.employee_id
+        <include refid="claimChart"></include>
+        GROUP BY ${groupType}
+
+    </select>
+    <sql id="saleChart">
+        <where>
+            <if test="beginDate!=null">
+
+                and po.applyDate>#{beginDate}
+            </if>
+            <if test="endDate!=null">
+                and po.applyDate &lt;=#{endDate}
+            </if>
+            <if test="pId>0">
+                and p.id=#{pId}
+            </if>
+            <if test="sId>0">
+                and safe.id=#{sId}
+            </if>
+                and po.state=4
+        </where>
+    </sql>
+    <sql id="claimChart">
+        <where>
+            <if test="eId>0">
+                and e.id=#{eId}
+            </if>
+            <if test="beginDate!=null">
+
+                and a.handDate>#{beginDate}
+            </if>
+            <if test="endDate!=null">
+                and a.handDate &lt;=#{endDate}
+            </if>
+        </where>
+    </sql>
+</mapper>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.SystemMenuMapper">
+
+
+    <!--
+
+
+
+    权限功能已经被被注释!!!!!!
+
+
+
+
+
+
+
+
+    -->
+
+
+
+
+
+
+
+
+
+   <!-- <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.SystemMenu">
+        <id column="id" property="id"/>
+        <result column="text" property="text"/>
+        <result column="url" property="url"/>
+        <result column="sn" property="sn"/>
+        <association property="permission" javaType="Permission" column="permission_id" select="cn.wolfcode.crm.mapper.PermissionMapper.selectByPrimaryKey"></association>
+        <collection property="children" ofType="SystemMenu" column="id" select="selectByParentId" ></collection>
+    </resultMap>-->
+    <!--使用手风情方式菜单,直接传入父菜单id来查询子菜单id-->
+    <resultMap id="BaseResultMapWithAccordion" type="cn.wolfcode.crm.domain.SystemMenu">
+        <id column="id" property="id"/>
+        <result column="text" property="text"/>
+        <result column="url" property="url"/>
+        <result column="sn" property="sn"/>
+        <association property="parentMenu" column="parent_id" javaType="systemMenu" select="selectByPrimaryKey"/>
+    </resultMap>
+  <!--  &lt;!&ndash;查询父菜单以及下面的子菜单&ndash;&gt;
+    <select id="getMenu" resultMap="BaseResultMap">
+        SELECT * FROM  systemmenu  WHERE parent_id IS NULL
+    </select>
+    &lt;!&ndash;根据父菜单的id去查询子菜单&ndash;&gt;
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT * FROM systemmenu WHERE parent_id=#{id}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `systemmenu`
+        WHERE id = #{id}
+    </delete>
+    <delete id="deleteChildByParentId">
+        DELETE FROM systemmenu
+        WHERE parent_id = #{parentId};
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.SystemMenu" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `systemmenu` (text, url, parent_id)
+        VALUES (#{text}, #{url}, #{parentMenu.id})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.SystemMenu">
+        UPDATE `systemmenu`
+        SET name      = #{text},
+            url       = #{url},
+            sn        = #{sn},
+            parent_id = #{parentMenu.id}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+    SELECT id, text, url, parent_id
+    FROM `systemmenu`
+  </select>
+    &lt;!&ndash;分页的条件 查询条件为parentId&ndash;&gt;
+    <select id="queryForCount" resultType="int">
+        SELECT count(id) from systemMenu
+        <include refid="baseSql"></include>
+    </select>
+    &lt;!&ndash;需求,查出所有菜单所对应的父菜单,由于是一张表,我们要做菜单的层级显示,所以得用额外sql的方式
+    &ndash;&gt;
+    <select id="queryForList" resultMap="BaseResultMap">
+        select id, text, url, parent_id
+        from `systemmenu`
+        <include refid="baseSql"></include>
+        limit #{beginIndex},#{rows}
+    </select>
+    &lt;!&ndash;根据角色id查询系统菜单&ndash;&gt;
+    <select id="selectSystemMenuByRoleId" resultType="cn.wolfcode.crm.domain.SystemMenu">
+        SELECT  sm.id,sm.name,sm.url,sm.sn,sm.parent_id  FROM systemmenu sm JOIN role_menu rm ON sm.id=rm.menu_id WHERE role_id=#{roleId}
+    </select>
+    &lt;!&ndash;根据父菜单的sn去查询子菜单的信息&ndash;&gt;
+    <select id="selectMenuByParentId" resultType="java.util.Map">
+        SELECT child.id id ,child.parent_id pid,child.name name,child.url controller
+        FROM systemmenu child LEFT JOIN systemmenu parent ON child.parent_id=parent.id  WHERE parent.sn=#{parentSn}
+    </select>
+    <select id="selectParentMenu" resultType="java.util.Map">
+        SELECT id,name text FROM systemmenu WHERE parent_id IS NULL
+    </select>
+    <select id="selectChildByParentId" resultType="java.util.Map">
+        SELECT id,name text,url FROM systemmenu WHERE parent_id=#{parentId}
+    </select>
+
+    &lt;!&ndash;共同的sql语句&ndash;&gt;
+    <sql id="baseSql">
+        <where>
+            <if test="parentId==null">
+                AND parent_id IS NULL
+            </if>
+            <if test="parentId!=null">
+                AND parent_id=#{parentId}
+            </if>
+        </where>
+    </sql>
+-->
+
+    <select id="selectByPrimaryKey" resultMap="BaseResultMapWithAccordion" parameterType="java.lang.Long">
+        SELECT id, text, url, parent_id
+        FROM `systemmenu`
+        WHERE id = #{id}
+    </select>
+
+    <!--根据父菜单id查询子菜单-->
+    <select id="getChildrenMenu" resultMap="BaseResultMapWithAccordion">
+      SELECT * FROM systemmenu WHERE parent_id=#{parent_id}
+    </select>
+</mapper>

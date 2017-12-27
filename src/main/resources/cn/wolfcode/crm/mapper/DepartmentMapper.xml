@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.DepartmentMapper">
+  <!-- 内联 -->
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Department">
+    <id column="id" property="id" />
+    <result column="sn" property="sn" />
+    <result column="name" property="name" />
+    <result column="state" property="state" />
+    <!-- 管理员 -->
+    <association javaType="cn.wolfcode.crm.domain.Employee" property="managerId">
+      <id column="e_id" property="id" />
+      <result column="e_username" property="username" />
+      <result column="e_realname" property="realname" />
+    </association>
+    <!-- 上级部门 -->
+    <association javaType="cn.wolfcode.crm.domain.Department" property="parentId">
+      <id column="d2_id" property="id" />
+      <result column="d2_name" property="name" />
+    </association>
+  </resultMap>
+
+  <!-- 额外sql: -->
+  <resultMap id="BaseSingleMap" type="cn.wolfcode.crm.domain.Department">
+    <id column="id" property="id" />
+    <result column="sn" property="sn" />
+    <result column="name" property="name" />
+    <result column="state" property="state" />
+    <!-- 管理员 -->
+    <association javaType="cn.wolfcode.crm.domain.Employee" property="managerId" column="manager_id"
+                 select="cn.wolfcode.crm.mapper.EmployeeMapper.getEmployeeByDeptId"/>
+    <!-- 上级部门 -->
+    <association javaType="cn.wolfcode.crm.domain.Department" property="parentId" column="parent_id"
+                 select="cn.wolfcode.crm.mapper.DepartmentMapper.selectByPrimaryKey"/>
+  </resultMap>
+
+
+  <delete id="deleteByPrimaryKey">
+    delete from `department`
+    where id = #{id}
+  </delete>
+
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into `department` (sn, name, manager_id, parent_id, state)
+    values (#{sn}, #{name}, #{managerId.id}, #{parentId.id}, #{state})
+  </insert>
+
+  <update id="updateByPrimaryKey">
+    update `department`
+    set sn = #{sn},
+      name = #{name},
+      manager_id = #{managerId.id},
+      parent_id = #{parentId.id},
+      state = #{state}
+    where id = #{id}
+  </update>
+
+  <select id="selectByPrimaryKey" resultMap="BaseSingleMap">
+    select id, sn, name, manager_id, parent_id, state
+    from `department`
+    where id = #{id}
+  </select>
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select d1.id, d1.sn, d1.name, e.id e_id,e.username e_username,e.realname e_realname,d2.id d2_id, d2.name d2_name, d1.state
+    from department d1 left join department d2 on d1.parent_id = d2.id
+left join employee e on e.id = d1.manager_id
+  </select>
+
+  <!-- 停用部门 -->
+  <update id="changeState">
+    update department set state = state^1 where id = #{id}
+  </update>
+
+  <select id="findIdAndName" resultType="map">
+  select id 部门编号,  name 部门名称
+  from `department`
+  </select>
+
+  <!-- 根据部门查询部门对象: -->
+    <select id="getDepartmentByDept" resultType="cn.wolfcode.crm.domain.Department">
+      select id, sn, name, manager_id, parent_id, state
+      from `department`
+      where name = #{deptName}
+    </select>
+
+</mapper>

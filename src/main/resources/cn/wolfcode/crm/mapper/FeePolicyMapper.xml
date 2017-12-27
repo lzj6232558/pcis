@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.FeePolicyMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.FeePolicy" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="totalAmount" property="totalAmount" />
+    <result column="paymentWay" property="paymentWay" jdbcType="INTEGER" />
+    <result column="state" property="state" jdbcType="INTEGER" />
+    <result column="beginDate" property="beginDate" jdbcType="DATE" />
+    <result column="endDate" property="endDate" jdbcType="DATE" />
+    <result column="policy_sn" property="policySn" jdbcType="VARCHAR" />
+    <result column="serialNumber" property="serialNumber" jdbcType="VARCHAR" />
+    <association property="customer" javaType="customer"
+                 column="customer_id" select="cn.wolfcode.crm.mapper.CustomerMapper.selectByPrimaryKey"/>
+    <association property="inputUser" javaType="employee"
+                 column="inputUser_id" select="cn.wolfcode.crm.mapper.EmployeeMapper.selectByPrimaryKey"/>
+    <association property="safetymechanism" javaType="safetymechanism"
+                 column="safetyMechanism_id" select="cn.wolfcode.crm.mapper.SafetymechanismMapper.selectByPrimaryKey"/>
+   </resultMap>
+
+  <!--通过保单来查询订购的产品-->
+  <resultMap id="productMap" type="cn.wolfcode.crm.domain.Product">
+    <id column="id" property="id"/>
+    <result column="sn" property="sn"/>
+    <result column="name" property="name"/>
+    <result column="safeguardYear" property="safeguardYear"/>
+    <result column="totalMoney" property="totalMoney"/>
+    <result column="annuafee" property="annuafee"/>
+    <result column="salesStatus" property="salesStatus"/>
+    <result column="undeduction" property="undeduction"/>
+    <result column="intro" property="intro"/>
+    <association property="safetyMechanism" javaType="safetymechanism"
+      column="safetyMechanism_id" select="cn.wolfcode.crm.mapper.SafetymechanismMapper.selectByPrimaryKey"/>
+  </resultMap>
+
+
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    DELETE FROM `feePolicy`
+    WHERE id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.FeePolicy" useGeneratedKeys="true" keyProperty="id" >
+    INSERT INTO `feePolicy` (customer_id, totalAmount, paymentWay, 
+      state, beginDate, endDate, 
+      inputUser_id, safetyMechanism_id, policy_sn, 
+      serialNumber)
+    VALUES (#{customer.id,jdbcType=BIGINT}, #{totalAmount}, #{paymentWay,jdbcType=INTEGER},
+      #{state,jdbcType=INTEGER}, #{beginDate,jdbcType=DATE}, #{endDate,jdbcType=DATE}, 
+      #{inputUser.id,jdbcType=BIGINT}, #{safetymechanism.id,jdbcType=BIGINT}, #{policySn,jdbcType=VARCHAR},
+      #{serialNumber,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.FeePolicy" >
+    UPDATE `feePolicy`
+    SET customer_id = #{customer.id,jdbcType=BIGINT},
+      totalAmount = #{totalAmount},
+      paymentWay = #{paymentWay,jdbcType=INTEGER},
+      state = #{state,jdbcType=INTEGER},
+      beginDate = #{beginDate,jdbcType=DATE},
+      endDate = #{endDate,jdbcType=DATE},
+      inputUser_id = #{inputUser.id,jdbcType=BIGINT},
+      safetyMechanism_id = #{safetymechanism.id,jdbcType=BIGINT},
+      policy_sn = #{policySn,jdbcType=VARCHAR},
+      serialNumber = #{serialNumber,jdbcType=VARCHAR}
+    WHERE id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    SELECT id, customer_id, totalAmount, paymentWay, state, beginDate, endDate, inputUser_id, 
+    safetyMechanism_id, policy_sn, serialNumber
+    FROM `feePolicy`
+    WHERE id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    SELECT id, customer_id, totalAmount, paymentWay, state, beginDate, endDate, inputUser_id, 
+    safetyMechanism_id, policy_sn, serialNumber
+    FROM `feePolicy`
+  </select>
+
+
+<sql id="condition_sql">
+  <where>
+    <if test="keywords!=null and keywords !=''">
+      and (c.name like concat('%',#{keywords},'%') or c.idno like concat('%',#{keywords},'%') )
+    </if>
+    <if test="policySn!=null and policySn !=''">
+      and f.policy_sn like concat('%',#{policySn},'%')
+    </if>
+    <if test="beginDate!=null and beginDate!=''">
+      and Date(f.beginDate) &gt;= #{beginDate}
+    </if>
+    <if test="endDate!=null and endDate !=''">
+      and Date(f.beginDate) &lt;=  #{endDate}
+    </if>
+  </where>
+</sql>
+
+  <!--分页查询-->
+  <select id="queryForyCount" resultType="int">
+    SELECT count(f.id) FROM `feePolicy` f left JOIN  `customer` c ON f.customer_id=c.id
+    <include refid="condition_sql"/>
+  </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+    SELECT f.id, f.customer_id, f.totalAmount, f.paymentWay, f.state, f.beginDate, f.endDate, f.inputUser_id,
+    f.safetyMechanism_id, f.policy_sn, f.serialNumber
+    FROM `feePolicy` f LEFT JOIN  `customer` c ON f.customer_id=c.id
+    <include refid="condition_sql"/>
+    LIMIT #{beginIndex},#{rows}
+  </select>
+
+
+
+  <!--policySn自动补全查询-->
+  <select id="autoSearchPolicySn" resultType="string">
+    SELECT policy_sn FROM feePolicy
+    WHERE policy_sn LIKE concat(#{param},'%')
+  </select>
+
+
+
+  <select id="autoSearchName" resultType="string">
+    SELECT c.name
+    FROM `feePolicy` f left JOIN  `customer` c ON f.customer_id=c.id
+    WHERE c.name LIKE concat(#{param},'%')
+  </select>
+
+  <select id="autoSearchIdno" resultType="string">
+    SELECT c.idno
+    FROM `feePolicy` f left JOIN  `customer` c ON f.customer_id=c.id
+    WHERE c.idno LIKE concat(#{param},'%')
+  </select>
+
+
+
+
+  <!--通过保单号id查询出订购的产品-->
+  <select id="getProducts" resultMap="productMap">
+
+    SELECT p.* FROM product p left JOIN policydetail pp ON pp.product_id=p.id
+    WHERE pp.policy_id=#{policyId}
+  </select>
+
+
+</mapper>

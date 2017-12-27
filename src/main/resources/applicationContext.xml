@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!--开启DI扫描和IOC扫描-->
+    <context:annotation-config/>
+    <context:component-scan base-package="cn.wolfcode.crm"/>
+    <!--开启spel扫描 属性占位符的扫描-->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!--配置德鲁伊的连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+    <!--配置sqlSessionFactory-->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactory">
+        <property name="dataSource" ref="dataSource"></property>
+        <!--<property name="mapperLocations" value="classpath:cn/wolfcode/crm/mapper/*Mapper.xml"></property>-->
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+        <property name="typeAliasesPackage" value="cn.wolfcode.crm.domain"></property>
+    </bean>
+    <!--配置事务 what 做事务的增强-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!--配置系统日志工具类的bean-->
+    <bean id="systemUtil" class="cn.wolfcode.crm.utils.SystemLogUtils"></bean>
+    <aop:config>
+        <aop:pointcut id="pc" expression="execution(* cn.wolfcode.crm.service.*Service.*(..))"></aop:pointcut>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pc"></aop:advisor>
+        <!--配置切点-->
+        <aop:aspect ref="systemUtil">
+            <aop:after method="writeLog" pointcut-ref="pc"></aop:after>
+        </aop:aspect>
+    </aop:config>
+    <!--what-->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <!--SUPPORTS：如果当前方法运行在一个已经开启了的事务里面，把自己加入到开启的那个事务中，如果当前方法在一个没有事务环境的情况下，则不会开启事务-->
+            <tx:method name="*query*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="*select*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="*list*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="*get*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="*find*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="*" propagation="REQUIRED"></tx:method>
+        </tx:attributes>
+    </tx:advice>
+    <!--配置mapper接口的扫描-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.wolfcode.crm.mapper"></property>
+    </bean>
+
+</beans>

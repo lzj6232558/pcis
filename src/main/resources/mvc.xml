@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/mvc 
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 引入spring相关插件 -->
+    <import resource="applicationContext.xml"/>
+    <!-- 引入shiro相关插件 -->
+    <import resource="shiro.xml"/>
+
+    <!--配置springmvc依赖的对象-->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/plain;charset=UTF-8</value>
+                        <value>text/html;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json; charset=UTF-8</value>
+                        <value>application/x-www-form-urlencoded; charset=UTF-8</value>
+                    </list>
+                </property>
+                <!-- 配置 objectMapper 为我们自定义扩展后的 CustomMapper -->
+                <property name="objectMapper">
+                    <bean class="cn.wolfcode.crm.jackson.CustomMapper">
+                    </bean>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!--配置视图解析器-->
+    <bean id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!--引入spring的配置文件-->
+    <import resource="classpath:applicationContext.xml"></import>
+    <import resource="classpath:shiro.xml"></import>
+    <!-- 配置拦截器
+     <mvc:interceptors>
+         <mvc:interceptor>
+             <mvc:mapping path="/**"/>
+             <mvc:exclude-mapping path="/login.do"></mvc:exclude-mapping>
+             <bean class="cn.wolfcode.crm.web.intercepator.LoginInterceptor"></bean>
+         </mvc:interceptor>
+         <mvc:interceptor>
+             <mvc:mapping path="/**"/>
+             <mvc:exclude-mapping path="/login.do"></mvc:exclude-mapping>
+             <bean class="cn.wolfcode.crm.web.intercepator.SecurityInterceptor"></bean>
+         </mvc:interceptor>
+     </mvc:interceptors>-->
+
+    <!--文件上传解析器-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"></property>
+        <property name="maxUploadSize" value="10485760000"></property>
+        <property name="maxInMemorySize" value="40960"></property>
+    </bean>
+
+</beans>

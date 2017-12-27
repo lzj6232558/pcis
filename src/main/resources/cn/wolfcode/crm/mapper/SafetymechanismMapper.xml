@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.SafetymechanismMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Safetymechanism" >
+    <id column="id" property="id" />
+    <result column="name" property="name" />
+    <result column="sn" property="sn" />
+    <result column="legalPerson" property="legalperson" />
+    <result column="dentityCard" property="dentitycard" />
+    <result column="contactWay" property="contactway" />
+    <result column="address" property="address" />
+    <result column="cooperation" property="cooperation" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `safetymechanism`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Safetymechanism" useGeneratedKeys="true" keyProperty="id">
+    insert into `safetymechanism` (name, sn, legalPerson, dentityCard, contactWay, address,
+      cooperation)
+    values (#{name}, #{sn}, #{legalperson}, #{dentitycard}, #{contactway}, #{address},
+      #{cooperation})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Safetymechanism" >
+    update `safetymechanism`
+    set name = #{name},
+      sn = #{sn},
+      legalPerson = #{legalperson},
+      dentityCard = #{dentitycard},
+      contactWay = #{contactway},
+      address = #{address},
+      cooperation = #{cooperation}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, name, sn, legalPerson, dentityCard, contactWay, address, cooperation
+    from `safetymechanism`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, name, sn, legalPerson, dentityCard, contactWay, address, cooperation
+    from `safetymechanism`
+  </select>
+
+  <select id="queryCount" resultType="java.lang.Integer">
+    select count(*) from safetymechanism
+    <include refid="baseSql"></include>
+
+  </select>
+  <select id="queryList" resultMap="BaseResultMap">
+    select * from safetymechanism
+    <include refid="baseSql"></include>
+    limit #{beginIndex},#{rows}
+  </select>
+  <select id="selectSafByEnqId" resultType="cn.wolfcode.crm.domain.Safetymechanism">
+      SELECT DISTINCT saf.* FROM safetymechanism saf JOIN enquiry en ON saf.id=en.safetymechanism_id WHERE saf.id=1
+  </select>
+  <sql id="baseSql">
+    <where>
+      <if test="keywords!=null and keywords!=''">
+        and (name like concat("%",#{keywords},"%") or sn like concat("%",#{keywords},"%"))
+      </if>
+    </where>
+  </sql>
+
+</mapper>

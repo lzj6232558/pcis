@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.CustomerMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Customer" >
+    <id column="id" property="id" />
+    <result column="idNo" property="idno" />
+    <result column="name" property="name" />
+    <result column="age" property="age" />
+    <result column="gender" property="gender" />
+    <result column="tel" property="tel" />
+    <result column="email" property="email" />
+    <result column="address" property="address" />
+    <result column="qq" property="qq" />
+    <result column="job" property="job" />
+    <result column="salary" property="salary" />
+    <result column="source" property="source" />
+    <result column="inputDate" property="inputdate" />
+    <result column="status" property="status" />
+
+    <association property="inputuser"  javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="e_id" property="id"/>
+      <result column="e_name" property="username"/>
+    </association>
+    <association property="changeuser"  javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="u_id" property="id"/>
+      <result column="u_name" property="username"/>
+    </association>
+
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `customer`
+    where id = #{id}
+  </delete>
+
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Customer" useGeneratedKeys="true" keyProperty="id" >
+    insert into `customer` (idNo, name, age, gender, tel, email, address, qq, 
+      job, salary, source, changeUser_id, inputUser_id, inputDate, status
+      )
+    values (#{idno}, #{name}, #{age}, #{gender}, #{tel}, #{email}, #{address}, #{qq}, 
+      #{job}, #{salary}, #{source}, #{changeuser.id}, #{inputuser.id}, #{inputdate}, #{status}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Customer" >
+    update `customer`
+    set idNo = #{idno},
+      name = #{name},
+      age = #{age},
+      gender = #{gender},
+      tel = #{tel},
+      email = #{email},
+      address = #{address},
+      qq = #{qq},
+      job = #{job},
+      salary = #{salary},
+      source = #{source},
+      changeUser_id = #{changeuser.id},
+      status = #{status}
+    where id = #{id}
+  </update>
+
+    <!--专门用于正式用户修改信息     好像也可以用于资源池客户修改-->
+    <update id="updateFormal">
+ update `customer`
+    set idNo = #{idno},
+      name = #{name},
+      age = #{age},
+      gender = #{gender},
+      tel = #{tel},
+      email = #{email},
+      address = #{address},
+      qq = #{qq},
+      job = #{job},
+      salary = #{salary},
+      source = #{source}     <!--不改变状态及负责人-->
+    where id = #{id}
+    </update>
+    
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, idNo, name, age, gender, tel, email, address, qq, job, salary, source, 
+    changeUser_id, inputUser_id, inputDate, status
+    from `customer`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, idNo, name, age, gender, tel, email, address, qq, job, salary, source,
+    changeUser_id, inputUser_id, inputDate, status
+    from `customer`
+  </select>
+
+  <sql id="mysql">
+    <where> <!--正式客户和潜在客户-->
+      <if test="status>0">
+        and status = #{status}
+      </if>     <!--分清楚: if中的status   是我qo中传过来的status-->
+      <if test="status==0">
+        and status &lt;= #{status}
+      </if>
+      <if test="keywords!=null and keywords!=''">
+        and (c.tel like concat('%',#{keywords},'%') or c.email like concat('%',#{keywords},'%') or c.salary like concat('%',#{keywords},'%'))
+      </if>
+       <if test="beginDate!=null">
+         and c.inputDate >= #{beginDate}
+       </if>
+      <if test="endDate!=null">
+        and c.inputDate &lt;= #{endDate}
+      </if>
+    </where>
+  </sql>
+    <select id="queryForList" resultMap="BaseResultMap">
+      select c.id, c.idNo, c.name, c.age, c.gender, c.tel, c.email, c.address, c.qq, c.job, c.salary, c.source,
+      c.changeUser_id, c.inputUser_id, c.inputDate, c.status ,e.id e_id,e.username e_name,u.id u_id,u.username u_name
+      from `customer`c LEFT JOIN employee e on c.inputUser_id = e.id LEFT JOIN employee u on c.changeUser_id = u.id
+    <include refid="mysql"/>
+    limit #{beginIndex},#{rows}
+    </select>
+
+  <select id="queryForCount" resultType="int">
+ select count(*)
+    from `customer`c LEFT JOIN employee e on c.inputUser_id = e.id LEFT JOIN employee u on c.changeUser_id = u.id
+    <include refid="mysql"/>
+  </select>
+  <!--查询正式客户-->
+    <select id="selectOfficialCustomer" resultMap="BaseResultMap">
+        select c.id, c.idNo, c.name, c.age, c.gender, c.tel, c.email, c.address, c.qq, c.job, c.salary, c.source,
+      c.changeUser_id, c.inputUser_id, c.inputDate, c.status ,e.id e_id,e.username e_name
+      from `customer`c LEFT JOIN employee e on c.inputUser_id = e.id
+      WHERE c.status=2
+    </select>
+  <select id="selectCusByEnqId" resultType="cn.wolfcode.crm.domain.Customer">
+    SELECT cus.* FROM customer cus JOIN enquiry en ON  cus.id=en.customer_id WHERE en.id=#{enqId}
+  </select>
+  <select id="insuerCustomer" resultType="cn.wolfcode.crm.domain.Customer">
+    SELECT * FROM customer WHERE status=2 AND idNo=#{idno}
+  </select>
+
+  <update id="updateChangeuser">
+    UPDATE customer set changeUser_id = null WHERE id = #{id}
+  </update>
+
+    <update id="updateStatus">
+      UPDATE `customer` SET  status = #{status} where id = #{id}
+    </update>
+
+    <!--在移交的时候修改changer的id-->
+  <update id="updateChange">
+    UPDATE customer set changeUser_id = #{changeId} WHERE id = #{id}
+  </update>
+    <update id="updateState2">
+      update customer
+      set  status=2 WHERE id=#{id}
+    </update>
+</mapper>

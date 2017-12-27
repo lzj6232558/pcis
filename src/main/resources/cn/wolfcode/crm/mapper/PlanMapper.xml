@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.PlanMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Plan" >
+    <id column="id" property="id" />
+    <result column="date" property="date" />
+    <result column="subject" property="subject" />
+    <result column="detail" property="detail" />
+    <result column="type" property="type" />
+    <result column="result" property="result" />
+    <result column="remark" property="remark" />
+    <result column="status" property="status" />
+    <association property="customer" column="customer_id" columnPrefix="c_" javaType="cn.wolfcode.crm.domain.Customer">
+      <id column="id" property="id"></id>
+      <result column="name" property="name"></result>
+    </association>
+    <association property="inputuser" column="inputUser_id" columnPrefix="e_" javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="id" property="id"></id>
+      <result column="username" property="username"></result>
+
+    </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `plan`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Plan" useGeneratedKeys="true" keyProperty="id" >
+    insert into `plan` (date, subject, detail, type, remark, customer_id,
+      inputUser_id, status)
+    values (#{date}, #{subject}, #{detail}, #{type},  #{remark}, #{customer.id},
+      #{inputuser.id}, #{status})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Plan" >
+    update `plan`
+    set date = #{date},
+      subject = #{subject},
+      detail = #{detail},
+      type = #{type},
+      remark = #{remark},
+      customer_id = #{customer.id},
+      status = #{status}
+    where id = #{id}
+  </update>
+  <update id="changeResultById">
+
+    update plan set result=#{result} where id=#{id}
+
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, date, subject, detail, type, result, remark, customer_id, inputUser_id, 
+    status
+    from `plan`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, date, subject, detail, type, result, remark, customer_id, inputUser_id, 
+    status
+    from `plan`
+  </select>
+
+  <select id="queryCount" resultType="java.lang.Integer">
+    select count(p.id) from plan p join customer c  on p.customer_id=c.id
+    join employee e on p.inputUser_id=e.id
+    <include refid="baseSql"></include>
+
+  </select>
+  <select id="queryList" resultMap="BaseResultMap">
+    select p.*,e.id e_id,e.username e_username,c.id c_id,c.name c_name from plan p join customer c  on p.customer_id=c.id
+    join employee e on p.inputUser_id=e.id
+    <include refid="baseSql"></include>
+    limit #{beginIndex},#{rows}
+  </select>
+  <sql id="baseSql">
+    <where>
+      <if test="keywords!=null and keywords!=''">
+        and (c.name like concat("%",#{keywords},"%") or p.subject like concat("%",#{keywords},"%"))
+      </if>
+      <if test="beginDate!=null and beginDate!=''">
+        and Date(p.date) &gt;= #{beginDate}
+      </if>
+      <if test="endDate!=null and endDate !=''">
+        and Date(p.date) &lt;=  #{endDate}
+      </if>
+
+    </where>
+
+  </sql>
+
+</mapper>

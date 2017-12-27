@@ -1,0 +1,119 @@
+/*.middle{
+	width: 1200px;
+	margin: 0px auto;
+}*/
+.middle .leftMenu{
+    width: 260px;
+    height: 1650px;
+    /*左侧下拉框除去最上层的颜色*/
+    background-color: #3da6d5;
+    float: left;
+}
+
+/*隐藏菜单后的样式*/
+.middle .hidLeftMenu{
+    display: none;
+    padding-top: 80px;
+    width: 40px;
+    height: 1650px;
+    /*隐藏后的演示颜色*/
+    background-color: #354045;
+    float: left;
+    /*右边框*/
+    border-right: 1px solid #cd1736;
+}
+.middle .hidLeftMenu .hidTitle{
+    /*字体颜色*/
+    color: #060405;
+    width: 20px;
+    margin-top: 20px;
+    line-height: 50px;
+    margin-left: 10px;
+    font-size: 20px;
+}
+.middle .hidLeftMenu .openMenu{
+    margin-left: 12px;
+    cursor: pointer;
+}
+/*隐藏菜单后的样式--结束*/
+
+.middle .leftMenu .topMenu{
+    height: 42px;
+    /*左侧下拉框最上层的颜色*/
+    background-color: #586065;
+}
+.middle .leftMenu .topMenu img{
+    margin: 11px;
+    float: left;
+}
+.middle .leftMenu .topMenu .changeMenu{
+    cursor: pointer;
+}
+.middle .leftMenu .topMenu .banshi{
+    padding-left: 23px;
+}
+.middle .leftMenu .topMenu .menuTitle{
+    text-align: center;
+    /*最上层字体颜色*/
+    color: #fdfff8;
+    float: left;
+    line-height: 42px;
+    font-size: 16px;
+    width: 120px;
+}
+.menu_list {
+    width: 260px;
+    background: #cd1736;
+}
+.menu_list ul li{
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+.menu_list ul li .fuMenu{
+    color: #F2F2F2;
+    font-size: 14px;
+    cursor: pointer;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    width: 260px;
+    /*分割线*/
+    border-bottom: 2px solid #3fcd4e;
+    float: left;
+}
+.menu_list ul li .xiala{
+    float: left;
+    margin-left: -50px;
+    margin-top: 27px;
+}
+.menu_list ul li .div1 {
+    width: 100%;
+    height: auto;
+    float: left;
+}
+.menu_list ul li .div1 .views{
+    color: #F2F2F2;
+    font-size: 14px;
+    height: 60px;
+    background-color: #586065;
+    margin-bottom: 2px;
+    cursor: pointer;
+    line-height: 60px;
+    text-align: center;
+    width: 260px;
+    display: block;
+}
+.div1 {
+    height: 200px;
+    display: none;
+}
+.menu_list ul li .div1 .zcd:hover{
+    /*子菜单的底色和分割线颜色*/
+    color: #FFFFFF;
+    background-color: #555555;
+}
+.removes{
+    color: #cd1736 !important;
+    border-left: 16px solid #fdfff8;
+}

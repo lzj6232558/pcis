@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.PolicyMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Policy">
+        <id column="id" property="id"/>
+        <result column="sn" property="sn"/>
+        <result column="state" property="state"/>
+        <result column="totalAmount" property="totalAmount"/>
+        <result column="applyDate" property="applyDate"/>
+        <result column="checkDate" property="checkDate"/>
+        <result column="beginDate" property="beginDate"/>
+        <result column="endDate" property="endDate"/>
+        <result column="duration" property="duration"/>
+        <result column="remark" property="remark"/>
+        <association property="car" javaType="cn.wolfcode.crm.domain.Car" columnPrefix="ca_">
+            <id property="id" column="id"></id>
+            <result column="brand" property="brand"></result>
+            <result column="plateNumber" property="plateNumber"></result>
+            <result column="model" property="model"></result>
+            <result column="gasDisplacement" property="gasDisplacement"></result>
+            <result column="size" property="size"></result>
+            <result column="purchaseDate" property="purchaseDate"></result>
+            <result column="valuation" property="valuation"></result>
+            <result column="category" property="category"></result>
+        </association>
+        <association property="customer" javaType="cn.wolfcode.crm.domain.Customer" columnPrefix="cus_">
+            <id property="id" column="id"></id>
+            <result property="name" column="name"></result>
+            <result property="address" column="address"></result>
+            <result property="tel" column="tel"></result>
+            <result property="idno" column="idNo"></result>
+            <result property="tel" column="tel"></result>
+        </association>
+        <association property="inputUser" javaType="cn.wolfcode.crm.domain.Employee" columnPrefix="inputUser_">
+            <id column="id" property="id"></id>
+            <result property="realname" column="realname"></result>
+        </association>
+        <association property="auditor" javaType="cn.wolfcode.crm.domain.Employee" columnPrefix="auditor_">
+            <id column="id" property="id"></id>
+            <result property="realname" column="realname"></result>
+        </association>
+        <!--查询产品对应的机构-->
+        <association property="safetymechanism" javaType="cn.wolfcode.crm.domain.Safetymechanism"
+        column="id"
+        select="cn.wolfcode.crm.mapper.ProductMapper.selectSafetymechanismByPolicyId"
+        />
+        <!--<association property="safetymechanism" javaType="cn.wolfcode.crm.domain.Safetymechanism" columnPrefix="saf_">
+            <id property="id" column="id"></id>
+            <result property="name" column="name"></result>
+        </association>-->
+        <!--<collection property="products" ofType="cn.wolfcode.crm.domain.Product" columnPrefix="prod_">
+            <id column="id" property="id"></id>
+            <result column="name" property="name"></result>
+            <result column="sn" property="sn"></result>
+            <result column="annuafee" property="annuafee"></result>
+        </collection>-->
+        <collection property="products" ofType="cn.wolfcode.crm.domain.Product" column="id"
+                    select="cn.wolfcode.crm.mapper.ProductMapper.selectProductByPolicyId"/>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `policy`
+        WHERE id = #{id}
+    </delete>
+    <!--根据订单的id删除中间表的关系-->
+    <delete id="deletePolicyProductRelation">
+        DELETE FROM policydetail
+        WHERE policy_id = #{id}
+    </delete>
+    <insert id="insert" keyProperty="id" parameterType="cn.wolfcode.crm.domain.Policy" useGeneratedKeys="true">
+        INSERT INTO `policy` (sn, state, customer_id, car_id, totalAmount, applyDate, checkDate,
+                              beginDate, endDate, duration, inputUser_id, auditor_id, safetyMechanism_id,
+                              remark)
+        VALUES (#{sn}, #{state}, #{customer.id}, #{car.id}, #{totalAmount}, #{applyDate}, #{checkDate},
+                       #{beginDate}, #{endDate}, #{duration}, #{inputUser.id}, #{auditor.id}, #{safetymechanism.id},
+                #{remark})
+    </insert>
+    <!--维护保单和保单产品的关系-->
+    <insert id="insertPolicyProductRelation">
+        INSERT INTO policydetail (policy_id, product_id,currentTotalMoney,currenAnnufee)
+        VALUES (#{policyId}, #{productId},#{totalMoney},#{annuaFlee})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Policy">
+        UPDATE `policy`
+        SET sn                 = #{sn},
+            state              = #{state},
+            customer_id        = #{customer.id},
+            car_id             = #{car.id},
+            totalAmount        = #{totalAmount},
+            applyDate          = #{applyDate},
+            checkDate          = #{checkDate},
+            beginDate          = #{beginDate},
+            endDate            = #{endDate},
+            duration           = #{duration},
+            inputUser_id       = #{inputUser.id},
+            auditor_id         = #{auditor.id}
+        WHERE id = #{id}
+    </update>
+    <!--更新保单的状态-->
+    <update id="changeState">
+        UPDATE policy SET state=#{state} where id=#{id}
+    </update>
+    <!--审核保单-->
+    <update id="audit">
+        UPDATE policy SET checkDate=#{checkDate},auditor_id=#{auditor.id},state=#{state} where id=#{id}
+    </update>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select id, sn, state, customer_id, car_id, totalAmount, applyDate, checkDate, beginDate,
+    endDate, duration, inputUser_id, auditor_id, safetyMechanism_id, remark
+    from `policy`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+    select id, sn, state, customer_id, car_id, totalAmount, applyDate, checkDate, beginDate,
+    endDate, duration, inputUser_id, auditor_id, safetyMechanism_id, remark
+    from `policy`
+  </select>
+    <select id="queryForCount" resultType="int">
+        /*SELECT count(p.id)
+        from `policy` p LEFT JOIN customer cus ON p.customer_id=cus.id LEFT JOIN car ca ON ca.id=p.car_id
+        LEFT JOIN employee inputUser ON p.inputUser_id=inputUser.id LEFT JOIN employee auditor ON
+        p.auditor_id=auditor.id
+        LEFT JOIN safetymechanism saf ON saf.id=p.safetyMechanism_id*/
+        SELECT DISTINCT count(p.id)
+        from `policy` p LEFT JOIN customer cus ON p.customer_id=cus.id LEFT JOIN car ca ON ca.id=p.car_id
+        LEFT JOIN employee inputUser ON p.inputUser_id=inputUser.id LEFT JOIN employee auditor ON
+        p.auditor_id=auditor.id
+        <include refid="baseSql"></include>
+    </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+        select DISTINCT p.id, p.sn, p.state, totalAmount, applyDate, checkDate, beginDate,
+        endDate, duration,cus.id cus_id,cus.name cus_name,cus.address cus_address,cus.idNo cus_idNo,cus.tel cus_tel,
+        ca.id ca_id,ca.brand ca_brand,ca.plateNumber ca_plateNumber,ca.model ca_model,ca.gasDisplacement
+        ca_gasDisplacement,
+        ca.size ca_size,ca.purchaseDate ca_purchaseDate,ca.valuation ca_valuation,ca.category ca_category
+        ,inputUser.id
+        inputUser_id,cus.name cus_car_name,
+        inputUser.realname inputUser_realname, auditor.id auditor_id,auditor.realname auditor_realname
+        from `policy` p LEFT JOIN customer cus ON p.customer_id=cus.id LEFT JOIN car ca ON ca.id=p.car_id
+        LEFT JOIN employee inputUser ON p.inputUser_id=inputUser.id LEFT JOIN employee auditor ON
+        p.auditor_id=auditor.id
+        /*LEFT JOIN safetymechanism saf ON saf.id=p.safetyMechanism_id
+        LEFT JOIN policy_product pd ON pd.policy_id=p.id
+        LEFT JOIN policydetail detail ON detail.policy_id=p.id
+        LEFT JOIN product prod ON pd.product_id=prod.id*/
+        <include refid="baseSql"></include>
+        limit #{beginIndex},#{rows}
+
+    </select>
+    <sql id="baseSql">
+        <where>
+            <if test="state!=-1">
+                p.state=#{state}
+            </if>
+            <if test="applicant!=null and applicant!=''">
+                and cus.name like concat('%',#{applicant},'%')
+            </if>
+            <if test="policyNo!=null and policyNo!=''">
+                and p.sn like concat('%',#{policyNo},'%')
+            </if>
+        </where>
+    </sql>
+    <select id="selectTemporary" resultMap="BaseResultMap">
+    </select>
+
+    <!-- 根据保单编号查询保单状态 -->
+    <select id="getStateBySn" resultType="Policy">
+        SELECT * FROM policy where sn=#{sn}
+    </select>
+</mapper>

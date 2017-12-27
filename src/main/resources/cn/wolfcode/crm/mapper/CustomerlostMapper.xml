@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.CustomerlostMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Customerlost" >
+    <id column="id" property="id" />
+    <result column="lostDate" property="lostdate" />
+    <result column="lostReason" property="lostreason" />
+
+    <association property="cust" javaType="cn.wolfcode.crm.domain.Customer">
+      <id column="m_id" property="id"/>
+      <result property="name" column="m_name"/>
+    </association>
+
+    <association property="chargeuser" javaType="cn.wolfcode.crm.domain.Employee">
+      <id property="id" column="e_id"/>
+      <result property="username" column="e_name"/>
+    </association>
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `customerlost`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Customerlost" useGeneratedKeys="true" keyProperty="id" >
+    insert into `customerlost` (cust_id, chargeUser_id, lostDate, lostReason)
+    values (#{cust.id}, #{chargeuser.id}, #{lostdate}, #{lostreason})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Customerlost" >
+    update `customerlost`
+    set cust_id = #{cust.id},
+      chargeUser_id = #{chargeuser.id},
+      lostDate = #{lostdate},
+      lostReason = #{lostreason}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, cust_id, chargeUser_id, lostDate, lostReason
+    from `customerlost`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, cust_id, chargeUser_id, lostDate, lostReason
+    from `customerlost`
+  </select>
+    <select id="queryForCount" resultType="int">
+       SELECT COUNT(*) from customerlost c LEFT JOIN employee e on c.chargeUser_id = e.id LEFT JOIN customer m on c.cust_id = m.id
+    </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+     select c.id, c.cust_id, c.chargeUser_id, c.lostDate, c.lostReason,e.id e_id,e.username e_name,m.id m_id,m.`name` m_name
+    from customerlost c LEFT JOIN employee e on c.chargeUser_id = e.id LEFT JOIN customer m on c.cust_id = m.id
+    limit #{beginIndex},#{rows}
+  </select>
+</mapper>

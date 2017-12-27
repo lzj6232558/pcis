@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.ProvinceMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Province">
+    <id column="id" property="id" />
+    <result column="name" property="name" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from `province`
+    where id = #{id}
+  </delete>
+  <insert id="insert" keyProperty="id" parameterType="cn.wolfcode.crm.domain.Province" useGeneratedKeys="true">
+    insert into `province` (name, parent_id)
+    values (#{name}, #{parent.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Province">
+    update `province`
+    set name = #{name},
+      parent_id = #{parent.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, name, parent_id
+    from `province`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, name, parent_id
+    from `province`
+  </select>
+  <select id="selectAllProvince" resultType="cn.wolfcode.crm.domain.Province">
+    SELECT id,name FROM province WHERE parent_id IS null;
+  </select>
+  <select id="selectAllCity" resultType="cn.wolfcode.crm.domain.Province">
+    SELECT id,name FROM province WHERE parent_id=#{provinceId}
+  </select>
+    <select id="selectHotCity" resultType="cn.wolfcode.crm.domain.Province">
+      SELECT id,name FROM province WHERE hotCity=1
+    </select>
+</mapper>

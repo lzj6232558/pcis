@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.EnquiryMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Enquiry">
+        <id column="id" property="id"/>
+        <result column="origin" property="origin"/>
+        <result column="registerDate" property="registerDate"/>
+        <result column="offerNumber" property="offerNumber"/>
+        <result column="totalAmount" property="totalAmount"/>
+        <result column="state" property="state"/>
+        <association property="safetymechanism"  javaType="cn.wolfcode.crm.domain.Safetymechanism" columnPrefix="saf_">
+            <id property="id" column="id"></id>
+            <result property="name" column="name"></result>
+        </association>
+        <!--关联机构-->
+        <association property="employee" javaType="cn.wolfcode.crm.domain.Employee" columnPrefix="emp_">
+            <id column="id" property="id"></id>
+            <result property="realname" column="realname"></result>
+        </association>
+        <association property="car" javaType="cn.wolfcode.crm.domain.Car" column="id"
+                     select="cn.wolfcode.crm.mapper.CarMapper.selectCarByEnqId"/>
+        <association property="customer" column="id" javaType="cn.wolfcode.crm.domain.Customer"
+                     select="cn.wolfcode.crm.mapper.CustomerMapper.selectCusByEnqId"/>
+        <collection property="product" ofType="cn.wolfcode.crm.domain.Product" column="id"
+                    select="cn.wolfcode.crm.mapper.ProductMapper.selectProByEnqId" />
+        <collection property="enquiryitems" ofType="cn.wolfcode.crm.domain.Enquiryitem"
+        column="id" select="cn.wolfcode.crm.mapper.EnquiryitemMapper.selectItemsByEnqId"/>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `enquiry`
+        WHERE id = #{id}
+    </delete>
+    <delete id="deleteEnquiryProductRelationByEnqId">
+        DELETE FROM enquiryitem WHERE enquiry_id=#{id}
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.Enquiry" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `enquiry` (city,
+                               car_id, customer_id, safetymechanism_id, origin, registerDate, employee_id, totalAmount, offerNumber
+        )
+        VALUES (#{city},
+                #{car.id}, #{customer.id}, #{safetymechanism.id}, #{origin}, #{registerDate}, #{employee.id},
+                #{totalAmount}, #{offerNumber}
+        )
+    </insert>
+    <!--维护关系-->
+    <insert id="insertEnquireProductRelation">
+        INSERT INTO enquiryitem (enquiry_id, product_id) VALUES (#{enquiryId}, #{productId})
+    </insert>
+    <insert id="insertRelation">
+        INSERT INTO enquiryitem (enquiry_id, product_id,currentTotalMoney,currentAnnuefee)
+        VALUES (#{enqId}, #{productId},#{totalMoney},#{annuafee})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Enquiry">
+        UPDATE `enquiry`
+        SET totalAmount=#{totalAmount}
+        WHERE id = #{id}
+    </update>
+    <update id="updateState">
+        UPDATE enquiry SET state=1 WHERE id=#{id}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    select id, city,  coverage,  car_id, customer_id,
+    product_id, safetymechanism_id, origin, registerDate
+    from `enquiry`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+    select id, city,  coverage,  car_id, customer_id,
+    product_id, safetymechanism_id, origin, registerDate
+    from `enquiry`
+  </select>
+    <!--询价单详细-->
+    <select id="queryForCount" resultType="java.lang.Integer">
+        SELECT count(en.id) FROM `enquiry` en  JOIN employee emp ON emp.id=en.employee_id
+        <include refid="condionsSql"></include>
+    </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+        select en.id, city,offerNumber,saf.id saf_id,saf.name saf_name,en.state,
+        origin, registerDate,totalAmount,emp.id emp_id,emp.realname emp_realname
+        FROM `enquiry` en  JOIN employee emp ON emp.id=en.employee_id JOIN safetymechanism saf ON saf.id=en.safetymechanism_id
+        <include refid="condionsSql"></include>
+        limit #{beginIndex},#{rows}
+    </select>
+    <select id="queryForList2" resultMap="BaseResultMap">
+        select en.id, city,offerNumber,saf.id saf_id,saf.name saf_name,
+        origin, registerDate,totalAmount,emp.id emp_id,emp.realname emp_realname
+        FROM `enquiry` en  JOIN employee emp ON emp.id=en.employee_id JOIN safetymechanism saf ON saf.id=en.safetymechanism_id
+        WHERE en.id=#{id}
+
+    </select>
+    <sql id="condionsSql">
+        <where>
+            <if test="number!='' and number!=null">
+                and en.offerNumber like concat("%",#{number},"%")
+            </if>
+            <if test="beginDate!=null">
+                and  en.registerDate>=#{beginDate}
+            </if>
+            <if test="endDate!=null">
+                and en.registerDate&lt;=#{endDate}
+            </if>
+        </where>
+    </sql>
+</mapper>

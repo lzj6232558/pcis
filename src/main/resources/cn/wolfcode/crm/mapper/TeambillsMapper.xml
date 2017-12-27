@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.TeambillsMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Teambills" >
+    <id column="id" property="id" />
+    <result column="product_id" property="product.id" />
+    <result column="safety_id" property="safety.id" />
+    <result column="inputuser_id" property="inputuser.id" />
+    <result column="inputdate" property="inputdate" />
+    <result column="remark" property="remark" />
+    <result column="customer_id" property="customer.id" />
+    <result column="sn" property="sn" />
+
+    <association property="product" javaType="cn.wolfcode.crm.domain.Product">
+        <id column="p_id" property="id"/>
+      <result column="p_name" property="name"/>
+    </association>
+
+    <association property="safety" javaType="cn.wolfcode.crm.domain.Safetymechanism">
+      <id column="s_id" property="id"/>
+      <result column="s_name" property="name"/>
+    </association>
+
+    <association property="inputuser" javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="i_id" property="id"/>
+      <result column="i_name" property="username"/>
+    </association>
+
+    <association property="customer" javaType="cn.wolfcode.crm.domain.Customer">
+      <id column="c_id" property="id"/>
+      <result column="c_name" property="name"/>
+    </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `teambills`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Teambills" useGeneratedKeys="true" keyProperty="id" >
+    insert into `teambills` (product_id, safety_id, inputuser_id, inputdate, remark,sn, customer_id
+      )
+    values (#{product.id}, #{safety.id}, #{inputuser.id}, #{inputdate}, #{remark}, #{sn}, #{customer.id}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Teambills" >
+    update `teambills`
+    SET product_id =#{product.id},safety_id=#{safety.id},remark=#{remark},sn=#{sn}
+      remark = #{remark}
+    where id = #{id}       <!--原因: 客户不可修改-->
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, product_id, safety_id, inputuser_id, inputdate, remark, customer_id,sn
+    from `teambills`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, product_id, safety_id, inputuser_id, inputdate, remark, customer_id,sn
+    from `teambills`
+  </select>
+
+  <select id="queryForCount" resultType="int">
+    SELECT COUNT(*) from teambills t LEFT JOIN product p on t.product_id = p.id
+LEFT JOIN safetymechanism s on t.safety_id = s.id
+LEFT JOIN employee i on t.inputuser_id = i.id
+LEFT JOIN customer c on t. customer_id = c.id
+  </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+ select t.id, t.product_id, t.safety_id, t.inputuser_id, t.inputdate, t.remark, t.customer_id,t.sn,
+p.id p_id,p.name p_name ,s.id s_id,s.name s_name ,i.id i_id,i.username i_name ,c.id c_id,c.name c_name
+from teambills t LEFT JOIN product p on t.product_id = p.id
+LEFT JOIN safetymechanism s on t.safety_id = s.id
+LEFT JOIN employee i on t.inputuser_id = i.id
+LEFT JOIN customer c on t. customer_id = c.id
+    limit #{beginIndex},#{rows}
+  </select>
+
+<!--用于查客户是否重复-->
+<select id="selectCustomer" resultType="long">
+ select  customer_id
+    from `teambills`
+</select>
+</mapper>

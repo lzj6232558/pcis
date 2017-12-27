@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!--配置安全管理员-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!--注册我们自己realm到安全管理员上-->
+        <property name="realm" ref="employeeRealm"></property>
+        <property name="cacheManager" ref="cacheManager"></property>
+    </bean>
+    <!--配置shiroFilter的工厂-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!--让我们的安全管理员经过我们的shirofilter-->
+        <property name="securityManager" ref="securityManager"></property>
+        <!--定义表单的登录路径-->
+        <property name="loginUrl" value="/login.do"></property>
+        <property name="unauthorizedUrl" value="/nopermission.jsp"></property>
+        <property name="successUrl" value="/main.do"></property>
+        <property name="filters">
+            <map>
+                <entry key="authc" value-ref="myFormFilter">
+                </entry>
+            </map>
+        </property>
+        <property name="filterChainDefinitions">
+            <value>
+                <!--匿名访问-->
+                /static/** = anon
+                /login.jsp = anon
+                /nopermission.jsp = anon
+                <!--登出调到的url路径,这里是一个登出的拦截器-->
+                /logout.do = logout
+                /** = authc
+            </value>
+        </property>
+    </bean>
+    <!--配置凭证匹配器-->
+    <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher" id="credentialsMatcher">
+        <property name="hashAlgorithmName" value="md5"></property>
+        <property name="hashIterations" value="2"></property>
+    </bean>
+    <!--注册自定义的realm-->
+    <bean class="cn.wolfcode.crm.realm.EmployeeRealm" id="employeeRealm">
+        <property name="credentialsMatcher" ref="credentialsMatcher"></property>
+    </bean>
+
+    <!--<aop:config proxy-target-class="true"></aop:config>-->
+    <!--配置第三方去扫描权限的注解,引入安全管理员-->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor ">
+        <property name="securityManager" ref="securityManager"></property>
+    </bean>
+     <!--缓存管理器-->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!--设置配置文件-->
+        <property name="cacheManagerConfigFile" value="classpath:shiro-ehcache.xml"></property>
+    </bean>
+</beans>

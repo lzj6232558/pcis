@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.AccidentItemMapper" >
+
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.AccidentItem" >
+    <id column="id" property="id" />
+    <result column="imagePath" property="imagePath" />
+    <result column="introduction" property="introduction" />
+    <result column="totalDamage" property="totalDamage" />
+    <result column="handDate" property="handDate"/>
+    <!-- 事故信息: -->
+    <association property="accidentId" column="accident_id" javaType="cn.wolfcode.crm.domain.Accident" select="cn.wolfcode.crm.mapper.AccidentMapper.getNameByAccidentId" />
+    <!-- 员工信息: -->
+    <association property="employeeId" javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="e_id" property="id"/>
+      <result column="e_username" property="username"/>
+    </association>
+  </resultMap>
+
+  <resultMap id="BaseResultMapSingle" type="cn.wolfcode.crm.domain.AccidentItem" >
+    <id column="id" property="id" />
+    <result column="imagePath" property="imagePath" />
+    <result column="introduction" property="introduction" />
+    <result column="totalDamage" property="totalDamage" />
+    <result column="handDate" property="handDate"/>
+    <!-- 事故信息: -->
+    <association property="accidentId" javaType="cn.wolfcode.crm.domain.Accident" column="accident_id"
+                 select="cn.wolfcode.crm.mapper.AccidentMapper.getNameByAccidentId"/>
+    <!-- 员工信息: -->
+    <association property="employeeId" javaType="cn.wolfcode.crm.domain.Employee" column="employee_id"
+                 select="cn.wolfcode.crm.mapper.EmployeeMapper.selectByPrimaryKey"/>
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `accidentitem`
+    where id = #{id}
+  </delete>
+
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.AccidentItem" useGeneratedKeys="true" keyProperty="id" >
+    insert into `accidentitem` (imagePath, introduction, totalDamage, handDate, accident_id,
+    employee_id)
+    values (#{imagePath}, #{introduction}, #{totalDamage}, #{handDate}, #{accidentId.id},
+    #{employeeId.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.AccidentItem" >
+    update `accidentitem`
+    set imagePath = #{imagePath},
+    introduction = #{introduction},
+    totalDamage = #{totalDamage},
+    handDate = #{handDate},
+    employee_id = #{employeeId.id}
+    where id = #{id}
+  </update>
+  <!-- 查询一条数据 -->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMapSingle" parameterType="java.lang.Long" >
+    select id, imagePath, introduction, totalDamage, handDate, accident_id, employee_id
+    from `accidentitem`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select item.id, item.imagePath, item.introduction, item.totalDamage, item.handDate,item.accident_id,
+    e.id e_id,e.username e_username
+    from accidentitem item left join employee e on item .employee_id=e.id
+  </select>
+
+
+  <!-- 共同的sql -->
+  <sql id="baseSql">
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and acc.policySn like concat('%',#{keyword},'%')
+      </if>
+      <if test="beginDate != null">
+        and acc.reporterTime &gt;=#{beginDate}
+      </if>
+      <if test="endDate">
+        and acc.reporterTime &lt;=#{endDate}
+      </if>
+    </where>
+  </sql>
+
+  <!-- 高级查询: -->
+  <select id="queryCount" resultType="java.lang.Integer">
+    select count(*)
+    from accidentitem item left join employee e on item .employee_id=e.id
+    join accident acc on item.accident_id=acc.id
+    <include refid="baseSql"/>
+  </select>
+  <!-- 高级查询:总数据 -->
+  <select id="queryList" resultMap="BaseResultMap">
+    select item.id, item.imagePath, item.introduction, item.totalDamage, item.handDate,item.accident_id,
+    e.id e_id,e.username e_username
+    from accidentitem item left join employee e on item .employee_id=e.id
+    join accident acc on item.accident_id=acc.id
+    <include refid="baseSql"/>
+    limit #{beginIndex},#{rows}
+  </select>
+</mapper>
+

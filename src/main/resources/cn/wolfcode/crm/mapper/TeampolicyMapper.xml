@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.TeampolicyMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Teampolicy" >
+    <id column="id" property="id" />
+    <result column="carplate" property="carplate" />
+    <result column="name" property="name" />
+    <result column="begindate" property="begindate"/>
+    <association property="employee" javaType="cn.wolfcode.crm.domain.Employee">
+      <id property="id" column="e_id"/>
+      <result property="username" column="e_name"/>
+    </association>
+
+    <!--<association property="audit" javaType="cn.wolfcode.crm.domain.Employee">
+      <id property="id" column="e_id"/>
+      <result property="username" column="e_name"/>
+    </association>-->
+
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `teampolicy`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Teampolicy" useGeneratedKeys="true" keyProperty="id" >
+    insert into `teampolicy` (carplate, name, employee_id, audit_id, begindate)
+    values (#{carplate}, #{name}, #{employee.id}, #{audit.id}, #{begindate})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Teampolicy" >
+    update `teampolicy`
+    set carplate = #{carplate},
+      name = #{name},
+      employee_id = #{employee.id},
+      audit_id = #{audit.id},
+      begindate = #{begindate}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, carplate, name, employee_id, audit_id, begindate
+    from `teampolicy`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, carplate, name, employee_id, audit_id, begindate
+    from `teampolicy`
+  </select>
+
+  <!--通过客户id  得到对应的明细-->
+  <select id="queryForCount" resultType="java.lang.Integer">
+    SELECT count(*) FROM teampolicy t LEFT JOIN employee e on t.employee_id = e.id
+		WHERE t.id in(select ct.t_id FROM custome_teampolicy ct
+		LEFT JOIN teambills te on ct.c_id = te.customer_id WHERE te.customer_id=#{customeId})
+  </select>
+
+  <!--通过客户id  得到对应的明细-->
+  <select id="queryForList" resultMap="BaseResultMap">
+  select t.id, t.carplate, t.name, t.employee_id, t.audit_id, t.begindate,e.id e_id,e.username e_name
+    FROM teampolicy t LEFT JOIN employee e on t.employee_id = e.id
+		WHERE t.id in(select ct.t_id FROM custome_teampolicy ct
+		LEFT JOIN teambills te on ct.c_id = te.customer_id WHERE te.customer_id=#{customeId})
+    limit #{beginIndex},#{rows}
+  </select>
+
+  <insert id="Relation">
+    INSERT INTO custome_teampolicy (c_id,t_id) VALUES (#{customId},#{pid})
+  </insert>
+
+
+</mapper>

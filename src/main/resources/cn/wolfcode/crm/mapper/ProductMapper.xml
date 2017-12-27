@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.ProductMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Product">
+        <id column="id" property="id"/>
+        <result column="sn" property="sn"/>
+        <result column="name" property="name"/>
+        <result column="safeguardYear" property="safeguardYear"/>
+        <result column="totalMoney" property="totalMoney"/>
+        <result column="annuafee" property="annuafee"/>
+        <result column="salesStatus" property="salesStatus"/>
+        <result column="undeduction" property="undeduction"/>
+        <result column="intro" property="intro"/>
+        <result property="currenAnnufee" column="currenAnnufee"></result>
+        <result property="currentTotalMoney" column="currentTotalMoney"></result>
+        <association property="safetyMechanism" column="safetymechanism_id"
+                     javaType="cn.wolfcode.crm.domain.Safetymechanism"
+                     columnPrefix="safe_">
+            <id column="id" property="id"></id>
+            <result column="name" property="name"></result>
+        </association>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `product`
+        WHERE id = #{id}
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `product` (sn, name, safetyMechanism_id, safeguardYear, totalMoney, annuafee,
+                               salesStatus, undeduction, intro)
+        VALUES (#{sn}, #{name}, #{safetyMechanism.id}, #{safeguardYear}, #{totalMoney}, #{annuafee},
+                #{salesStatus}, #{undeduction}, #{intro})
+    </insert>
+    <!--插入-->
+    <insert id="insertRelation">
+        INSERT INTO enquiryitem (enquiry_id, product_id, currentTotalMoney, currentAnnuefee)
+        VALUES (#{enquiryId}, #{product.id}, #{product.totalMoney}, #{product.annuafee})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Product">
+        UPDATE `product`
+        SET sn                 = #{sn},
+            name               = #{name},
+            safetyMechanism_id = #{safetyMechanism.id},
+            safeguardYear      = #{safeguardYear},
+            totalMoney         = #{totalMoney},
+            annuafee           = #{annuafee},
+            salesStatus        = #{salesStatus},
+            undeduction        = #{undeduction},
+            intro              = #{intro}
+        WHERE id = #{id}
+    </update>
+    <!--修改保额-->
+    <update id="updateTotalMoney">
+        UPDATE enquiryitem SET currentTotalMoney = #{product.totalMoney}
+        <if test="product.annuafee!=null">
+            , currentAnnuefee= #{product.annuafee}
+        </if>
+        where product_id = #{product.id} and enquiry_id=#{enquiryId}
+    </update>
+    <update id="updateTotalMoney2">
+        UPDATE product
+        SET totalMoney = #{totalMoney},
+            annuafee   = #{annuafee}
+        WHERE id = #{id};
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    select id, sn, name, safetyMechanism_id, safeguardYear, totalMoney, annuafee, salesStatus,
+    undeduction, intro
+    from `product`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+       select  sa.id safe_id,sa.name safe_name,detai.currenAnnufee,detai.currentTotalMoney,p.id,p.sn ,p.name  FROM policydetail detai JOIN
+      product p ON p.id=detai.product_id JOIN safetymechanism sa on sa.id=p.safetyMechanism_id
+      WHERE detai.policy_id=#{id}
+    </select>
+    <select id="queryCount" resultType="java.lang.Integer">
+        select count(p.id) from product p join safetymechanism safe on p.safetyMechanism_id=safe.id
+        <include refid="baseSql"></include>
+
+    </select>
+    <select id="queryList" resultMap="BaseResultMap">
+        select p.*,safe.id safe_id, safe.name safe_name from product p join safetymechanism safe on
+        p.safetyMechanism_id=safe.id
+        <include refid="baseSql"></include>
+        limit #{beginIndex},#{rows}
+    </select>
+
+    <!--通过保单的id查询对应的产品明细-->
+    <select id="selectProductByPolicyId" resultType="cn.wolfcode.crm.domain.Product">
+      SELECT detail.currentTotalMoney,detail.currenAnnufee,p.id,p.name,p.sn
+      FROM  policydetail detail JOIN product p ON detail.product_id=p.id
+      WHERE policy_id=#{id}
+  </select>
+    <!--根据订单的id,查询保险机构-->
+    <select id="selectSafetymechanismByPolicyId" resultType="cn.wolfcode.crm.domain.Safetymechanism">
+      SELECT saf.* FROM policy p JOIN safetymechanism saf on saf.id=p.safetyMechanism_id
+      WHERE p.id=#{id}
+  </select>
+    <select id="selectProductByItemId" resultMap="BaseResultMap">
+        SELECT p.id, p.sn, p.name, safetyMechanism_id, safeguardYear, salesStatus,
+        undeduction, intro,
+        safe.id safe_id,safe.name safe_name FROM product p  JOIN
+         safetymechanism safe ON p.safetyMechanism_id=safe.id
+
+        WHERE p.safetyMechanism_id=#{id}
+    </select>
+    <!--根据询价单的id查询所有的保险产品信息-->
+    <select id="selectProByEnqId" resultType="cn.wolfcode.crm.domain.Product">
+            SELECT pro.* FROM product pro JOIN enquiryitem pe ON pro.id=pe.product_id JOIN enquiry en ON en.id=pe.enquiry_id
+            WHERE en.id=#{enqId}
+    </select>
+    <select id="selectTotalMoney" resultType="cn.wolfcode.crm.domain.Enquiryitem">
+        SELECT currentTotalMoney,currentAnnuefee FROM enquiryitem WHERE enquiry_id=#{enquiryId}
+    </select>
+    <select id="selectByProductIdAndenquiryId" resultType="java.lang.Integer">
+        SELECT count(*) FROM enquiryitem WHERE enquiry_id=#{enquiryId} and product_id=#{id}
+    </select>
+    <select id="selectProductByItemId2" resultMap="BaseResultMap">
+       SELECT p.*,
+        safe.id safe_id,safe.name safe_name FROM product p  JOIN
+         safetymechanism safe ON p.safetyMechanism_id=safe.id
+        WHERE p.safetyMechanism_id=#{id}
+    </select>
+
+    <sql id="baseSql">
+        <where>
+            <if test="keywords!=null and keywords!=''">
+                and (p.name like concat("%",#{keywords},"%") or p.sn like concat("%",#{keywords},"%"))
+            </if>
+            <if test="smId !=-1">
+                and p.safetyMechanism_id=#{smId}
+            </if>
+            <if test="sStatus!=-1">
+                and p.salesStatus=#{sStatus}
+            </if>
+        </where>
+
+    </sql>
+</mapper>

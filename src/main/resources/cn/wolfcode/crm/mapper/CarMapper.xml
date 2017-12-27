@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.CarMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Car">
+        <id column="id" property="id"/>
+        <result column="brand" property="brand"/>
+        <result column="model" property="model"/>
+        <result column="plateNumber" property="plateNumber"/>
+        <result column="gasDisplacement" property="gasDisplacement"/>
+        <result column="purchaseDate" property="purchaseDate"/>
+        <result column="remarks" property="remarks"/>
+        <result column="valuation" property="valuation"/>
+        <result column="category" property="category"/>
+        <result column="size" property="size"/>
+        <result column="VIn" property="VIN"/>
+        <result column="engineNumber" property="engineNumber"/>
+        <association property="customer" javaType="cn.wolfcode.crm.domain.Customer" columnPrefix="c_">
+            <id property="id" column="id"></id>
+            <result property="name" column="name"></result>
+        </association>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `car`
+        WHERE id = #{id}
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.Car" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `car` (customer_id, brand, model, plateNumber, gasDisplacement, purchaseDate,
+                           remarks, valuation, category, size, VIN, engineNumber)
+        VALUES (#{customer.id}, #{brand}, #{model}, #{plateNumber}, #{gasDisplacement}, #{purchaseDate},
+                                #{remarks}, #{valuation}, #{category}, #{size}, #{VIN}, #{engineNumber})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Car">
+        UPDATE `car`
+        SET customer_id     = #{customer.id},
+            brand           = #{brand},
+            model           = #{model},
+            plateNumber     = #{plateNumber},
+            gasDisplacement = #{gasDisplacement},
+            purchaseDate    = #{purchaseDate},
+            remarks         = #{remarks},
+            valuation       = #{valuation},
+            category        = #{category},
+            size            = #{size},
+            VIN             = #{VIN},
+            engineNumber    = #{engineNumber}
+        WHERE id = #{id}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    select id, customer_id, brand, model, plateNumber, gasDisplacement, purchaseDate, 
+    remarks, valuation, category, size,VIN,engineNumber
+    from `car`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+    select id, customer_id, brand, model, plateNumber, gasDisplacement, purchaseDate, 
+    remarks, valuation, category, size,VIN,engineNumber
+    from `car`
+  </select>
+    <!--分页-->
+    <select id="queryForCount" resultType="java.lang.Integer">
+        SELECT count(c.id) from car c LEFT JOIN customer cus ON c.customer_id=cus.id
+        <include refid="conditionSql"></include>
+    </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+        select c.id, c.brand, c.model, c.plateNumber, c.gasDisplacement, c.purchaseDate,c.remarks, c.valuation,
+        c.category, c.size,VIN,engineNumber,
+        cus.id c_id,cus.name c_name
+        from car c LEFT JOIN customer cus ON c.customer_id=cus.id
+        <include refid="conditionSql"></include>
+        limit #{beginIndex},#{rows}
+    </select>
+    <!--根据询价单的id查询车辆的信息-->
+    <select id="selectCarByEnqId" resultType="cn.wolfcode.crm.domain.Car">
+        select ca.*  FROM car ca JOIN enquiry en ON ca.id=en.car_id WHERE en.id=#{id}
+    </select>
+    <sql id="conditionSql">
+        <where>
+            <if test="keyword!=null and keyword!=''">
+                AND ( c.brand LIKE concat('%',#{keyword},'%') or c.plateNumber like concat('%',#{keyword},'%')
+                or cus.name like concat('%',#{keyword},'%'))
+
+            </if>
+        </where>
+    </sql>
+
+</mapper>

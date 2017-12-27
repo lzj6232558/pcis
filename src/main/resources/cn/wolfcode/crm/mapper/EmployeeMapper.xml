@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.EmployeeMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Employee">
+        <id column="id" property="id"/>
+        <result column="userName" property="username"/>
+        <result column="realName" property="realname"/>
+        <result column="passWord" property="password"/>
+        <result column="tel" property="tel"/>
+        <result column="email" property="email"/>
+        <result column="inputTime" property="inputTime"/>
+        <result column="state" property="state"/>
+        <result column="admin" property="admin"/>
+        <association property="dept" javaType="cn.wolfcode.crm.domain.Department" columnPrefix="d_">
+            <id property="id" column="id"></id>
+            <result property="name" column="name"></result>
+        </association>
+        <collection property="roles" ofType="Role" column="id" select="cn.wolfcode.crm.mapper.RoleMapper.selectRolesByEmployeeId"></collection>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `employee`
+        WHERE id = #{id}
+    </delete>
+    <!--打破关系-->
+    <delete id="deleteEmpRoleRelation">
+        DELETE FROM employee_role WHERE employee_id=#{id}
+    </delete>
+    <insert id="insert" keyProperty="id" parameterType="cn.wolfcode.crm.domain.Employee" useGeneratedKeys="true">
+        INSERT INTO `employee` (userName, realName, passWord, tel, email, inputTime, state,
+                                dept_id, admin)
+        VALUES (#{username}, #{realname}, #{password}, #{tel}, #{email}, #{inputTime}, #{state},
+                #{dept.id}, #{admin})
+    </insert>
+    <insert id="insertEmpRoleRelation">
+        INSERT INTO employee_role (employee_id, role_id) VALUES (#{EmpId},#{roleId})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Employee">
+        UPDATE `employee`
+        SET username  = #{username},
+            realname  = #{realname},
+            tel       = #{tel},
+            email     = #{email},
+            inputTime = #{inputTime},
+            dept_id   = #{dept.id},
+            admin     = #{admin}
+        WHERE id = #{id}
+    </update>
+    <!--改变员工的状态-->
+    <update id="changeState">
+        UPDATE employee SET state=state^1 WHERE id=#{id}
+    </update>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select e.id, e.userName, e.realName, e.passWord, e.tel, e.email, e.inputTime, e.state,  e.admin,
+    d.id d_id,d.name d_name
+    from `employee` e LEFT JOIN department d ON d.id=e.dept_id
+    where e.id = #{id}
+  </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+    select e.id, e.userName, e.realName, e.passWord, e.tel, e.email, e.inputTime, e.state,  e.admin,
+    d.id d_id,d.name d_name
+    from `employee` e LEFT JOIN department d ON d.id=e.dept_id
+  </select>
+    <!--分页的条件-->
+    <select id="queryForCount" resultType="int">
+        select count(e.id) FROM employee e
+        <include refid="conditionSql"></include>
+    </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+        select e.id, e.userName, e.realName, e.passWord, e.tel, e.email, e.inputTime, e.state, e.admin,
+        d.id d_id,d.name d_name
+        from `employee` e LEFT JOIN department d ON d.id=e.dept_id
+        <include refid="conditionSql"></include>
+        limit #{beginIndex},#{rows}
+    </select>
+
+    <select id="checkLogin" resultType="cn.wolfcode.crm.domain.Employee">
+            SELECT * FROM employee WHERE userName=#{name} and password=#{password}
+        </select>
+    <!--根据用户的用户名去查询用户的信息-->
+    <select id="selectByUsername" resultType="cn.wolfcode.crm.domain.Employee">
+        SELECT * FROM employee WHERE userName=#{principal}
+    </select>
+    <sql id="conditionSql">
+        <where>
+            <if test="keyword!=null and keyword!=''">
+                AND ( e.userName LIKE concat('%',#{keyword},'%') or e.email like concat('%',#{keyword},'%'))
+            </if>
+            <if test="deptId>0">
+                and e.dept_id=#{deptId}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据员工名查询员工对象: -->
+    <select id="getEmployeeByUsername" resultType="cn.wolfcode.crm.domain.Employee">
+        select e.id, e.userName, e.realName, e.passWord, e.tel, e.email, e.inputTime, e.state,  e.admin,
+        d.id d_id,d.name d_name
+        from `employee` e LEFT JOIN department d ON d.id=e.dept_id
+        where e.username = #{username}
+    </select>
+
+
+    <select id="getEmployeeByDeptId" resultMap="BaseResultMap">
+        SELECT * FROM  employee WHERE id=#{id}
+    </select>
+</mapper>

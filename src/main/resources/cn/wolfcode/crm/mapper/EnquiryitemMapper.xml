@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.EnquiryitemMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Enquiryitem" >
+    <id column="id" property="id" />
+    <result column="current_totalMoney" property="currentTotalmoney" />
+    <result column="current_annuefee" property="currentAnnuefee" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `enquiryitem`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Enquiryitem" useGeneratedKeys="true" keyProperty="id" >
+    insert into `enquiryitem` (enquiry_id, product_id, current_totalMoney, current_annuefee)
+    values (#{enquiry.id}, #{product.d}, #{currentTotalmoney}, #{currentAnnuefee})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Enquiryitem" >
+    update `enquiryitem`
+    set enquiry_id = #{enquiry.id},
+      product_id = #{product.id},
+      current_totalMoney = #{currentTotalmoney},
+      current_annuefee = #{currentAnnuefee}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, enquiry_id, product_id, current_totalMoney, current_annuefee
+    from `enquiryitem`
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, enquiry_id, product_id, currentTotalMoney, currentAnnuefee
+    from `enquiryitem`
+  </select>
+  <select id="selectTotalMoneyByProId" resultType="cn.wolfcode.crm.domain.Enquiryitem">
+      SELECT * FROM enquiryitem item JOIN product p ON p.id=item.product_id WHERE p.id=#{id}
+  </select>
+  <select id="selectItemsByEnqId" resultType="cn.wolfcode.crm.domain.Enquiryitem">
+    SELECT * FROM  enquiryitem WHERE enquiry_id=#{enqId}
+  </select>
+</mapper>

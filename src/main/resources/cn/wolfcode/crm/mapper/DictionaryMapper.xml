@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.DictionaryMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Dictionary">
+        <id column="id" property="id"/>
+        <result column="sn" property="sn"/>
+        <result column="name" property="name"/>
+        <result column="intro" property="intro"/>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `dictionary`
+        WHERE id = #{id}
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.Dictionary" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `dictionary` (sn, name, intro)
+        VALUES (#{sn}, #{name}, #{intro})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Dictionary">
+        UPDATE `dictionary`
+        SET sn    = #{sn},
+            name  = #{name},
+            intro = #{intro}
+        WHERE id = #{id}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    select id, sn, name, intro
+    from `dictionary`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+    select id, sn, name, intro
+    from `dictionary`
+  </select>
+    <!--分页-->
+    <select id="queryForCount" resultType="java.lang.Integer">
+    SELECT count(id) FROM dictionary
+  </select>
+    <select id="queryForList" resultMap="BaseResultMap">
+    select *
+    from  dictionary
+    limit #{beginIndex},#{rows}
+  </select>
+    <select id="selectDictionary" resultType="java.util.Map">
+        SELECT id,name FROM dictionary
+    </select>
+
+
+</mapper>

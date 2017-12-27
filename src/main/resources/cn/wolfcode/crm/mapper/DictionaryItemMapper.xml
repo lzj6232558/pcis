@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.DictionaryItemMapper">
+    <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.DictionaryItem">
+        <id column="id" property="id"/>
+        <result column="sn" property="sn"/>
+        <result column="name" property="name"/>
+        <result column="intro" property="intro"/>
+        <association property="dictionary" javaType="cn.wolfcode.crm.domain.Dictionary" columnPrefix="d_">
+            <id property="id" column="id"></id>
+            <id property="name" column="name"></id>
+        </association>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM `dictionaryitem`
+        WHERE id = #{id}
+    </delete>
+    <insert id="insert" parameterType="cn.wolfcode.crm.domain.DictionaryItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `dictionaryitem` (sn, name, intro, dictionary_id)
+        VALUES (#{sn}, #{name}, #{intro}, #{dictionary.id})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.DictionaryItem">
+        UPDATE `dictionaryitem`
+        SET sn            = #{sn},
+            name          = #{name},
+            intro         = #{intro},
+            dictionary_id = #{dictionary.id}
+        WHERE id = #{id}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    select id, sn, name, intro, dictionary_id
+    from `dictionaryitem`
+    where id = #{id}
+  </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+    select id, sn, name, intro, dictionary_id
+    from `dictionaryitem`
+  </select>
+    <!--分页-->
+    <select id="queryForCount" resultType="java.lang.Integer">
+    SELECT count(item.id) FROM dictionaryitem item WHERE item.dictionary_id=(
+    select id FROM dictionary WHERE sn=#{sn}
+    )
+  </select>
+    <!--根据左边目录查询出右边的明细-->
+    <select id="queryForList" resultMap="BaseResultMap">
+    select item.id,item.sn,item.name,item.intro,d.name d_name,d.id d_id
+    from  dictionaryitem item LEFT JOIN dictionary d ON item.dictionary_id=d.id WHERE item.dictionary_id=(
+    select id FROM dictionary WHERE sn=#{sn}
+    )
+    limit #{beginIndex},#{rows}
+  </select>
+
+    <!--通过sn 查询出客户来源及收入和职业-->
+    <select id="select" resultMap="BaseResultMap">
+         select item.id,item.sn,item.name,item.intro,d.name d_name,d.id d_id
+    from  dictionaryitem item LEFT JOIN dictionary d ON item.dictionary_id=d.id WHERE item.dictionary_id=(
+    select id FROM dictionary WHERE sn=#{sn}
+    )
+    </select>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm.mapper.AccidentMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Accident" >
+    <id column="id" property="id" />
+    <result column="reporterName" property="reporterName" />
+    <result column="reporterSex" property="reporterSex" />
+    <result column="reporterIphon" property="reporterIphon" />
+    <result column="reporterTime" property="reporterTime" />
+    <result column="reporterPlace" property="reporterPlace" />
+    <result column="policySn" property="policySn" />
+    <result column="plateNumber" property="plateNumber" />
+    <!-- 客服员工: -->
+    <association property="employeeId" javaType="cn.wolfcode.crm.domain.Employee">
+      <id column="e_id" property="id"/>
+      <result column="e_username" property="username"/>
+    </association>
+  </resultMap>
+
+ <!-- 单独查询 -->
+  <resultMap id="BaseResultMapSingle" type="cn.wolfcode.crm.domain.Accident" >
+    <id column="id" property="id" />
+    <result column="reporterPlace" property="reporterPlace" />
+    <result column="policySn" property="policySn" />
+    <result column="plateNumber" property="plateNumber" />
+    <result column="cus_name" property="name" />
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from `accident`
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm.domain.Accident" useGeneratedKeys="true" keyProperty="id" >
+    insert into `accident` (reporterName, reporterSex, reporterIphon, reporterTime, reporterPlace, 
+      policySn, plateNumber, employee_id)
+    values (#{reporterName}, #{reporterSex}, #{reporterIphon}, #{reporterTime}, #{reporterPlace}, 
+      #{policySn}, #{plateNumber}, #{employeeId.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm.domain.Accident" >
+    update `accident`
+    set reporterName = #{reporterName},
+      reporterSex = #{reporterSex},
+      reporterIphon = #{reporterIphon},
+      reporterTime = #{reporterTime},
+      reporterPlace = #{reporterPlace},
+      policySn = #{policySn},
+      plateNumber = #{plateNumber},
+      employee_id = #{employeeId.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, reporterName, reporterSex, reporterIphon, reporterTime, reporterPlace, 
+    policySn, plateNumber, employee_id
+    from `accident`
+    where id = #{id}
+  </select>
+  <!-- 查询所有的数据 -->
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select acc.id, acc.reporterName, acc.reporterSex, acc.reporterIphon, acc.reporterTime, acc.reporterPlace,
+    acc.policySn, acc.plateNumber, e.id e_id,e.username e_username
+    from accident acc join employee e on acc.employee_id = e.id;
+  </select>
+
+  <!-- 高级查询:共同代码: -->
+  <sql id="baseSql">
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and (acc.reporterName like concat('%',#{keyword},'%') or acc.reporterIphon like concat('%',#{keyword},'%') or acc.policySn like concat('%',#{keyword},'%'))
+      </if>
+      <if test="beginDate != null">
+        and acc.reporterTime &gt;=#{beginDate}
+      </if>
+      <if test="endDate!=null">
+        and acc.reporterTime &lt;=#{endDate}
+      </if>
+    </where>
+  </sql>
+
+  <!-- 高级查询:总条数据 -->
+  <select id="queryCount" resultType="java.lang.Integer">
+    SELECT count(*)
+    from accident acc join employee e on acc.employee_id = e.id
+    <include refid="baseSql"/>
+  </select>
+
+  <!-- 高级查询:总数据 -->
+  <select id="queryList" resultMap="BaseResultMap">
+    select acc.id, acc.reporterName, acc.reporterSex, acc.reporterIphon, acc.reporterTime, acc.reporterPlace,
+    acc.policySn, acc.plateNumber, e.id e_id,e.username e_username
+    from accident acc join employee e on acc.employee_id = e.id
+    <include refid="baseSql"/>
+    limit #{beginIndex},#{rows}
+  </select>
+
+  <!-- 获取车主姓名 -->
+    <select id="getNameByAccidentId" resultMap="BaseResultMapSingle">
+        select acc.id,acc.reporterPlace,acc.policySn,acc.plateNumber,cus.name cus_name
+        from accident acc join car c on acc.plateNumber=c.plateNumber
+        join customer cus on c.customer_id=cus.id
+        where acc.id = #{accidentId}
+    </select>
+</mapper>
